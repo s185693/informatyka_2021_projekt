@@ -197,6 +197,7 @@ void Menu2::draw(sf::RenderWindow& window)
 
 int main()
 {
+	std::cout << "helo world";
 	int menu_gry = 0;
 	int exit = 0;
 	while (exit == 0)
