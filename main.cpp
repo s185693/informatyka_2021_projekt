@@ -279,6 +279,7 @@ int main()
 		}
 		if (menu_gry == 1)
 		{
+			//losowanie pozycji
 			int tab[5][3];
 			for (int i = 0; i < 5; i++)
 			{
