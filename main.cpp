@@ -1,9 +1,3 @@
-/*
-Temat projektu: Gra bitwa morska
-Gracz wciela siê w kapitana statku 
-aaaaa
-
-*/
 #define MAX_LICZBA_POZIOMOW 3
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Color.hpp>
