@@ -12,9 +12,10 @@
 #include <sstream>
 #include <stdlib.h>
 #include <fstream>
+
 const float PI = 3.14159265;
 
-class pocisk {
+class Bullet {
 private:
 	sf::Vector2f position;//wspolrzedne
 public:
@@ -25,7 +26,7 @@ public:
 	sf::RectangleShape rectangle;
 	int ticksLeft = 50;
 	bool visible = 1;
-	void givePociskXY(float x_in, float y_in, float rotation);
+	void giveBulletXY(float x_in, float y_in, float rotation);
 	sf::RectangleShape getRect() { return rectangle; }
 	float GetRotationToMouse(sf::RenderWindow* window, sf::RectangleShape rectangle) {
 		sf::Vector2f curPos = rectangle.getPosition();
@@ -39,10 +40,8 @@ public:
 		return rotation;
 	}
 };
-
-void pocisk::givePociskXY(float x_in, float y_in, float rotation)
+void Bullet::giveBulletXY(float x_in, float y_in, float rotation)
 {
-
 	rectangle.setSize(sf::Vector2f(50, 8));
 	rectangle.setOrigin(25.f, 4.f);
 
@@ -55,16 +54,15 @@ void pocisk::givePociskXY(float x_in, float y_in, float rotation)
 	position.y = y_in + (10 * acceleration.y);
 	rectangle.setPosition(position);
 }
-
-class pilka {
+class Soldier {
 private:
 	sf::Vector2f position;//wspolrzedne
 public:
-	sf::CircleShape ball;//pilka
-	sf::RectangleShape rectangle;
-	void givePilkaXY(float x_in, float y_in);//tworz pilke w polozeniu (x,y)
-	sf::CircleShape getPilka() { return ball; }//zwroc pilke
-	sf::RectangleShape getRect() { return rectangle; }//zwroc pilke
+	sf::CircleShape ball;//Soldier
+	sf::RectangleShape rectangle;//Turret
+	void giveSoldierXY(float x_in, float y_in);//tworz obiekt w polozeniu (x,y)
+	sf::CircleShape getSoldier() { return ball; }//zwroc ¿o³nierza
+	sf::RectangleShape getRect() { return rectangle; }//zwroc wie¿yczkê
 	bool visible = 1;
 	sf::Vector2f getPos() { return ball.getPosition(); }
 	float GetRotationToMouse(sf::RenderWindow* window, sf::RectangleShape rectangle) {
@@ -80,8 +78,7 @@ public:
 		return rotation;
 	}
 };
-
-void pilka::givePilkaXY(float x_in, float y_in)
+void Soldier::giveSoldierXY(float x_in, float y_in)
 {
 	position.x = x_in;
 	position.y = y_in;
@@ -90,17 +87,15 @@ void pilka::givePilkaXY(float x_in, float y_in)
 	ball.setPosition(position);//pozycja poczatkowa
 
 	rectangle.setSize(sf::Vector2f(90, 75));
-	rectangle.setOrigin(37.5, 37.5);;
+	rectangle.setOrigin(37.5, 37.5);
 	rectangle.setPosition(position);
 }
-
-bool sprawdzKolizje(pilka* p1, pocisk* p2) {
+bool sprawdzKolizje(Soldier* p1, Bullet* p2) {
 	sf::FloatRect intersection;
 	if (p1->ball.getGlobalBounds().intersects(p2->rectangle.getGlobalBounds(), intersection)) {
 		return true;
 	}
 	return false;
-
 }
 class Menu
 {
@@ -110,12 +105,12 @@ private:
 	int selectedItem = 0;
 public:
 	Menu(float width, float height);
-	~Menu() {};
 	void przesunG();//przesun do gory
 	void przesunD();//przesun w dol
 	int getSelectedItem() { return selectedItem; }//zwroc poziom menu
 	void draw(sf::RenderWindow& window);//rysuj menu w oknie
 };
+
 Menu::Menu(float width, float height)
 { //laduj czcionke
 	if (!font.loadFromFile("arial.ttf"))
@@ -127,13 +122,13 @@ Menu::Menu(float width, float height)
 	menu[0].setFillColor(sf::Color::Cyan);
 	menu[0].setString("Nowa gra");
 	menu[0].setPosition(sf::Vector2f(width / 3, height / (MAX_LICZBA_POZIOMOW + 1) * 1));
+	
 	menu[1].setFont(font);
-	menu[1].setFillColor(sf::Color::White);
+	menu[1].setFillColor(sf::Color(255, 237, 148));
 	menu[1].setString("Wyjscie");
 	menu[1].setPosition(sf::Vector2f(width / 3, height / (MAX_LICZBA_POZIOMOW + 1) * 2));
 }
-//rysowanie menu w biezacym oknie
-void Menu::draw(sf::RenderWindow& window)
+void Menu::draw(sf::RenderWindow& window)//rysowanie menu w biezacym oknie
 {
 	for (int i = 0; i < MAX_LICZBA_POZIOMOW; i++)
 	{
@@ -143,7 +138,7 @@ void Menu::draw(sf::RenderWindow& window)
 void Menu::przesunG() {
 	if (selectedItem >= 0 && selectedItem < MAX_LICZBA_POZIOMOW)
 	{
-		menu[selectedItem].setFillColor(sf::Color::White);
+		menu[selectedItem].setFillColor(sf::Color(255, 237, 148));
 		menu[selectedItem].setStyle(sf::Text::Regular);
 		selectedItem--;
 		if (selectedItem < 0)
@@ -156,7 +151,7 @@ void Menu::przesunD()
 {
 	if (selectedItem >= 0 && selectedItem < MAX_LICZBA_POZIOMOW)
 	{
-		menu[selectedItem].setFillColor(sf::Color::White);
+		menu[selectedItem].setFillColor(sf::Color(255, 237, 148));
 		menu[selectedItem].setStyle(sf::Text::Regular);
 		selectedItem++;
 		if (selectedItem >= MAX_LICZBA_POZIOMOW)
@@ -181,18 +176,18 @@ void myDelay(int opoznienie)
 	}
 }
 
+
 int main()
 {
 	int menu_gry = 0;
 	int exit = 0;
-	sf::Font font;
-	font.loadFromFile("arial.ttf");
+	
 	while (exit == 0)
 	{
 		if (menu_gry == 0)
 		{
 			int menu_selected_flag = 0;
-			sf::RenderWindow window(sf::VideoMode(800, 600), "SFML demo");// utworz okno
+			sf::RenderWindow window(sf::VideoMode(800, 600), "Main menu");//utworz okno
 			Menu menu(window.getSize().x, window.getSize().y);
 			// petla wieczna - dopoki okno jest otwarte
 			while (window.isOpen() && exit == 0)
@@ -260,15 +255,17 @@ int main()
 		if (menu_gry == 1)
 		{
 			int ticks = 0;
-			pilka gracze[100];
-			pocisk pociski[200];
+			Soldier enemies[100];
+			Bullet Bullets[200];
 			// stworz okno
-			sf::RenderWindow window(sf::VideoMode(800, 600), "GRA v.03");
-			pilka p0;
-			p0.givePilkaXY(400, 337.5);//stworz wie¿ê
+			sf::RenderWindow window(sf::VideoMode(800, 600), "GRA v.04");
+			//tworzenie okna gry (rozgrywki)
+
+			sf::Font font;
+			font.loadFromFile("arial.ttf");
+			
 			sf::Texture texture;
 			texture.loadFromFile("textures/pngegg.png");
-			p0.rectangle.setTexture(&texture);
 
 			sf::Texture texture2;
 			texture2.loadFromFile("textures/toppngcom-soldier-png.png");
@@ -276,17 +273,12 @@ int main()
 			sf::Texture texture3;
 			texture3.loadFromFile("textures/pngwing.com.png");
 
-			sf::RectangleShape zamek, zamek2;
-			zamek.setSize(sf::Vector2f(250, 100));
-			zamek2.setSize(sf::Vector2f(250, 100));
-			zamek.setPosition(550, 490);
-			zamek2.setPosition(550, 90);
-
 			sf::Texture texture4;
 			texture4.loadFromFile("textures/pngwingcom.png");
-			zamek.setTexture(&texture4);
-			zamek2.setTexture(&texture4);
 
+			Soldier Turret;
+			Turret.giveSoldierXY(400, 337.5);//stworz wie¿ê
+			Turret.rectangle.setTexture(&texture);
 
 			sf::Text text;
 			text.setFont(font);
@@ -321,6 +313,14 @@ int main()
 			pauzaText.setPosition(sf::Vector2f(350, 150));
 			pauzaText.setString("*PAUZA*");
 
+			sf::RectangleShape zamek, zamek2;
+			zamek.setSize(sf::Vector2f(250, 100));
+			zamek2.setSize(sf::Vector2f(250, 100));
+			zamek.setPosition(550, 490);
+			zamek2.setPosition(550, 90);
+			zamek.setTexture(&texture4);
+			zamek2.setTexture(&texture4);
+
 			sf::ConvexShape convex;
 			convex.setPointCount(5);
 			convex.setFillColor(sf::Color::Red);
@@ -332,7 +332,7 @@ int main()
 			convex.setPosition(sf::Vector2f(40, 40));
 
 			int przeciwnicy = 0;
-			int pociski_count = 0;
+			int Bullets_count = 0;
 
 			sf::Clock zegar;//zegarek
 			sf::Clock zegar2;//zegarek
@@ -347,7 +347,6 @@ int main()
 			// okno widoczne, dopoki nie [x]
 			while (window.isOpen() && exit == 0) {
 				// petla sprawdzajace zdarzenia
-
 				sf::Event event;
 				while (window.pollEvent(event) && exit == 0) {//escape
 					//jezeli nacisnieto jakikolwiek przycisk
@@ -390,13 +389,6 @@ int main()
 						}
 					}
 				}
-				while (window.pollEvent(event))
-				{
-					// jezeli zdarzenie zamknij - zamykamy okno
-					if (event.type == sf::Event::Closed)
-						window.close();
-				}
-
 				sf::Vector2f pos, sss;
 				pos.x = 1.5 * difficulty;
 				pos.y = 0;
@@ -406,8 +398,8 @@ int main()
 				if (zapis) {
 					std::ofstream plik;
 					plik.open("example.txt", std::ios::binary);
-					plik.write((char*)(gracze), sizeof(pilka) * 100);
-					plik.write((char*)(pociski), sizeof(pocisk) * 200);
+					plik.write((char*)(enemies), sizeof(Soldier) * 100);
+					plik.write((char*)(Bullets), sizeof(Bullet) * 200);
 					plik.close();
 					zapis = 0;
 				}
@@ -415,81 +407,76 @@ int main()
 					pause = 1;
 					std::ifstream plik;
 					plik.open("example.txt", std::ios::binary);
-					plik.read((char*)(gracze), sizeof(gracze) * 100);
-					plik.read((char*)(pociski), sizeof(pociski) * 200);
+					plik.read((char*)(enemies), sizeof(enemies) * 100);
+					plik.read((char*)(Bullets), sizeof(Bullets) * 200);
 					plik.close();
 					odczyt = 0;
 					pause = 0;
 				}
-
 				if (pause == 0) {
-					p0.rectangle.setRotation(p0.GetRotationToMouse(&window, p0.rectangle));
-					if (zegar2.getElapsedTime().asMilliseconds() > 380 && pociski_count < 200) {
+					Turret.rectangle.setRotation(Turret.GetRotationToMouse(&window, Turret.rectangle));
+					if (zegar2.getElapsedTime().asMilliseconds() > 380 && Bullets_count < 200) {
 						if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-							pociski[pociski_count].givePociskXY(400, 337.5, p0.GetRotationToMouse(&window, p0.rectangle));
-							pociski[pociski_count].rectangle.setTexture(&texture3);
-							pociski[pociski_count].visible = 1;
-							pociski_count++;
+							Bullets[Bullets_count].giveBulletXY(400, 337.5, Turret.GetRotationToMouse(&window, Turret.rectangle));
+							Bullets[Bullets_count].rectangle.setTexture(&texture3);
+							Bullets[Bullets_count].visible = 1;
+							Bullets_count++;
 							zegar2.restart();
 						}
 					}
-
 					//procedura animacji odswiezana co 33.3ms
 					if (zegar.getElapsedTime().asMilliseconds() > 33.3f) {
 						//sprawdz brzegi okna w poziomie
 						for (int i = 0; i < przeciwnicy; i++) {
-							if (gracze[i].visible == 1) {
-								if (gracze[i].ball.getPosition().x > 600) {
+							if (enemies[i].visible == 1) {
+								if (enemies[i].ball.getPosition().x > 600) {
 									std::cout << "Koniec gry..." << std::endl;
 									exit = 1;
 									break;
 								}
 								for (int j = 0; j < difficulty; j++)
-									gracze[i].ball.move(pos);
-							}
-
-						}
-						for (int i = 0; i < pociski_count; i++) {
-							pociski[i].ticksLeft -= 1;
-							if (pociski[i].ticksLeft < 1) {
-								pociski[i].rectangle.setPosition(sss);
-								pociski[i].visible = 0;
-								pociski[i].acceleration.x = 0;
-								pociski[i].acceleration.y = 0;
+									enemies[i].ball.move(pos);
 							}
 						}
-						for (int i = 0; i < pociski_count; i++) {
-							if (pociski[i].visible == 1) {
-								pociski[i].rectangle.move(pociski[i].acceleration);
+						for (int i = 0; i < Bullets_count; i++) {
+							Bullets[i].ticksLeft -= 1;
+							if (Bullets[i].ticksLeft < 1) {
+								Bullets[i].rectangle.setPosition(sss);
+								Bullets[i].visible = 0;
+								Bullets[i].acceleration.x = 0;
+								Bullets[i].acceleration.y = 0;
+							}
+						}
+						for (int i = 0; i < Bullets_count; i++) {
+							if (Bullets[i].visible == 1) {
+								Bullets[i].rectangle.move(Bullets[i].acceleration);
 								for (int j = 0; j < przeciwnicy; j++) {
-									if (sprawdzKolizje(&gracze[j], &pociski[i])) {
-										pociski[i].rectangle.setPosition(sss);
-										pociski[i].visible = 0;
-										pociski[i].acceleration.x = 0;
-										pociski[i].acceleration.y = 0;
-										gracze[j].ball.setPosition(sss);
-										gracze[j].visible = 0;
+									if (sprawdzKolizje(&enemies[j], &Bullets[i])) {
+										Bullets[i].rectangle.setPosition(sss);
+										Bullets[i].visible = 0;
+										Bullets[i].acceleration.x = 0;
+										Bullets[i].acceleration.y = 0;
+										enemies[j].ball.setPosition(sss);
+										enemies[j].visible = 0;
 										punkty++;
 									}
 								}
 							}
 						}
-
 						if (ticks >= 35) {
 							if (przeciwnicy < 100) {
-								if (przeciwnicy % 2 == 0) gracze[przeciwnicy].givePilkaXY(-50, 500);
-								else gracze[przeciwnicy].givePilkaXY(-50, 100);
+								if (przeciwnicy % 2 == 0) enemies[przeciwnicy].giveSoldierXY(-50, 500);
+								else enemies[przeciwnicy].giveSoldierXY(-50, 100);
 
-								gracze[przeciwnicy].ball.setTexture(&texture2);
+								enemies[przeciwnicy].ball.setTexture(&texture2);
 								przeciwnicy++;
 							}
 							ticks = 0;
 						}
-
 						sf::Text mytext;
 						std::stringstream ss;
 
-						ss << "Pociski: " << 200 - pociski_count;
+						ss << "Pociski: " << 200 - Bullets_count;
 						text.setString(ss.str().c_str());
 						ss.str("");
 						ss << "Przeciwnicy: " << 100 - przeciwnicy;
@@ -500,11 +487,10 @@ int main()
 						ticks++;
 						zegar.restart();
 					}
-
 				}
 				//rysowanie z buforowaniem
 				// czysci okno, wypelniajac kolorem
-				window.clear(sf::Color::White);
+				window.clear(sf::Color(255, 237, 148));
 				// procedura rysujaca poszczegolne obiekty w oknie
 				// umieszcza obiekty w buforze
 
@@ -517,13 +503,13 @@ int main()
 						window.draw(pauzaText);
 				}
 				else {
-					window.draw(p0.getRect());
-					window.draw(gracze[2].getRect());
-					for (pilka ss : gracze)
+					window.draw(Turret.getRect());
+					window.draw(enemies[2].getRect());
+					for (Soldier ss : enemies)
 						if (ss.visible == 1)
-							window.draw(ss.getPilka());
+							window.draw(ss.getSoldier());
 
-					for (pocisk ss : pociski)
+					for (Bullet ss : Bullets)
 						if (ss.visible == 1)
 							window.draw(ss.getRect());
 
